@@ -83,7 +83,7 @@ Simple_CRM_V1/
 cd backend
 npm run dev
 ```
-The backend server will run on `http://localhost:5000`
+The backend server will run on `http://localhost:5001`
 
 #### Frontend
 ```bash
@@ -91,6 +91,111 @@ cd frontend
 npm run dev
 ```
 The frontend will run on `http://localhost:3000`
+
+## Authentication
+
+The CRM uses JWT (JSON Web Tokens) for authentication with role-based access control.
+
+### User Roles
+- **ADMIN**: Full access to all features
+- **USER**: Standard user access
+
+### API Endpoints
+
+#### Register a new user
+```bash
+POST /auth/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "securepassword",
+  "role": "USER"  // Optional: ADMIN or USER (defaults to USER)
+}
+```
+
+**Response:**
+```json
+{
+  "message": "User registered successfully",
+  "user": {
+    "id": "uuid",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "USER",
+    "createdAt": "2025-11-29T..."
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+#### Login
+```bash
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "securepassword"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Login successful",
+  "user": {
+    "id": "uuid",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "USER"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+#### Access Protected Routes
+Include the JWT token in the Authorization header:
+
+```bash
+GET /protected
+Authorization: Bearer <your-jwt-token>
+```
+
+**Response (Success):**
+```json
+{
+  "message": "This is a protected route",
+  "user": {
+    "userId": "uuid",
+    "email": "john@example.com",
+    "role": "USER"
+  }
+}
+```
+
+**Response (No Token):**
+```json
+{
+  "error": "No token provided"
+}
+```
+
+### JWT Token Claims
+The JWT token contains the following claims:
+- `userId`: User's unique identifier
+- `email`: User's email address
+- `role`: User's role (ADMIN or USER)
+- `iat`: Token issued at timestamp
+- `exp`: Token expiration timestamp (default: 7 days)
+
+### Environment Variables
+Configure these in `backend/.env`:
+```
+JWT_SECRET=your-secret-key-change-in-production
+JWT_EXPIRES_IN=7d
+```
 
 ## Development Roadmap
 

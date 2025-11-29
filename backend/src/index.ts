@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import authRoutes from './routes/authRoutes';
+import { authMiddleware, AuthRequest } from './middleware/authMiddleware';
 
 dotenv.config();
 
@@ -18,6 +20,21 @@ app.get('/health', (req: Request, res: Response) => {
     status: 'ok',
     message: 'Simple CRM Backend is running',
     timestamp: new Date().toISOString(),
+  });
+});
+
+// Auth routes
+app.use('/auth', authRoutes);
+
+// Protected route example
+app.get('/protected', authMiddleware, (req: AuthRequest, res: Response) => {
+  res.status(200).json({
+    message: 'This is a protected route',
+    user: {
+      userId: req.userId,
+      email: req.userEmail,
+      role: req.userRole,
+    },
   });
 });
 
