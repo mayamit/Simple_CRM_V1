@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import customerRoutes from './routes/customerRoutes';
+import noteRoutes from './routes/noteRoutes';
 import { authMiddleware, AuthRequest } from './middleware/authMiddleware';
 
 dotenv.config();
@@ -29,6 +30,9 @@ app.use('/auth', authRoutes);
 
 // Customer routes (protected)
 app.use('/customers', customerRoutes);
+
+// Note routes (protected)
+app.use('/', noteRoutes);
 
 // Protected route example
 app.get('/protected', authMiddleware, (req: AuthRequest, res: Response) => {

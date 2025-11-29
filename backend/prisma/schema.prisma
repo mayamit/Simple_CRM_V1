@@ -20,6 +20,7 @@ model User {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   customers Customer[] // Customers assigned to this user
+  notes     Note[]     // Notes created by this user
 }
 
 // Customer model for CRM
@@ -35,4 +36,17 @@ model Customer {
   isDeleted        Boolean   @default(false) // Soft delete flag
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  notes            Note[]    // Notes related to this customer
+}
+
+// Note model for customer interaction tracking
+model Note {
+  id              String   @id @default(uuid())
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdByUserId String
+  createdByUser   User     @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+  content         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
