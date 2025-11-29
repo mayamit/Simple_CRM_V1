@@ -12,11 +12,27 @@ datasource db {
 
 // User model for authentication
 model User {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   name      String
-  email     String   @unique
+  email     String     @unique
   password  String
-  role      String   @default("USER") // ADMIN or USER
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      String     @default("USER") // ADMIN or USER
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  customers Customer[] // Customers assigned to this user
+}
+
+// Customer model for CRM
+model Customer {
+  id               String    @id @default(uuid())
+  name             String
+  email            String    @unique
+  phone            String?
+  company          String?
+  status           String    @default("Lead") // Lead | Prospect | Active | Inactive
+  assignedToUserId String?
+  assignedToUser   User?     @relation(fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  isDeleted        Boolean   @default(false) // Soft delete flag
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }

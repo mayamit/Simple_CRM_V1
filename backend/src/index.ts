@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
+import customerRoutes from './routes/customerRoutes';
 import { authMiddleware, AuthRequest } from './middleware/authMiddleware';
 
 dotenv.config();
@@ -25,6 +26,9 @@ app.get('/health', (req: Request, res: Response) => {
 
 // Auth routes
 app.use('/auth', authRoutes);
+
+// Customer routes (protected)
+app.use('/customers', customerRoutes);
 
 // Protected route example
 app.get('/protected', authMiddleware, (req: AuthRequest, res: Response) => {
