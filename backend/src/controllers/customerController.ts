@@ -104,7 +104,7 @@ export const createCustomer = async (req: AuthRequest, res: Response): Promise<v
   }
 };
 
-// GET /customers - Get all customers with pagination (role-based filtering)
+// GET /customers - Get all customers with pagination (role-based filtering + search + status filter)
 export const getCustomers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const page = parseInt(req.query.page as string) || 1;
@@ -112,6 +112,8 @@ export const getCustomers = async (req: AuthRequest, res: Response): Promise<voi
     const skip = (page - 1) * limit;
     const userRole = req.userRole!;
     const userId = req.userId!;
+    const search = req.query.search as string;
+    const status = req.query.status as string;
 
     // Build where clause based on role
     const whereClause: any = {
@@ -123,6 +125,36 @@ export const getCustomers = async (req: AuthRequest, res: Response): Promise<voi
       whereClause.assignedToUserId = userId;
     }
     // Admins see all customers (no additional filter needed)
+
+    // Add search filter (case-insensitive on name, email, company)
+    // Note: SQLite's LIKE operator is case-insensitive by default
+    if (search && search.trim().length > 0) {
+      whereClause.OR = [
+        {
+          name: {
+            contains: search.trim(),
+          },
+        },
+        {
+          email: {
+            contains: search.trim(),
+          },
+        },
+        {
+          company: {
+            contains: search.trim(),
+          },
+        },
+      ];
+    }
+
+    // Add status filter
+    if (status && status.trim().length > 0) {
+      // Validate status
+      if (VALID_STATUSES.includes(status)) {
+        whereClause.status = status;
+      }
+    }
 
     const [customers, total] = await Promise.all([
       prisma.customer.findMany({
