@@ -119,7 +119,7 @@ export default function Dashboard() {
               </p>
             </div>
 
-            <div style={{ padding: '15px', backgroundColor: '#c8e6c9', borderRadius: '8px', border: '1px solid '#81c784' }}>
+            <div style={{ padding: '15px', backgroundColor: '#c8e6c9', borderRadius: '8px', border: '1px solid #81c784' }}>
               <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#2e7d32' }}>Active</p>
               <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: '#1b5e20' }}>
                 {summary.customersByStatus.Active}
