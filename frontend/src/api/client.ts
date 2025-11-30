@@ -156,6 +156,25 @@ export const createCustomer = async (data: {
   });
 };
 
+export const updateCustomer = async (id: string, data: {
+  name?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  status?: string;
+}) => {
+  return apiClient(`/customers/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteCustomer = async (id: string) => {
+  return apiClient(`/customers/${id}`, {
+    method: 'DELETE',
+  });
+};
+
 // Note APIs
 export const getCustomerNotes = async (customerId: string): Promise<{ notes: Note[] }> => {
   return apiClient(`/customers/${customerId}/notes`);
