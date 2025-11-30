@@ -5,8 +5,9 @@ import {
   getCustomerById,
   updateCustomer,
   deleteCustomer,
+  assignCustomer,
 } from '../controllers/customerController';
-import { authMiddleware } from '../middleware/authMiddleware';
+import { authMiddleware, requireAdmin } from '../middleware/authMiddleware';
 
 const router = Router();
 
@@ -27,5 +28,8 @@ router.put('/:id', updateCustomer);
 
 // DELETE /customers/:id - Delete a customer (soft delete)
 router.delete('/:id', deleteCustomer);
+
+// PUT /customers/:id/assign - Assign customer to a user (Admin only)
+router.put('/:id/assign', requireAdmin, assignCustomer);
 
 export default router;

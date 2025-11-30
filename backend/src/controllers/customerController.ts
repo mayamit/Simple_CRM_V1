@@ -104,18 +104,29 @@ export const createCustomer = async (req: AuthRequest, res: Response): Promise<v
   }
 };
 
-// GET /customers - Get all customers with pagination
-export const getCustomers = async (req: Request, res: Response): Promise<void> => {
+// GET /customers - Get all customers with pagination (role-based filtering)
+export const getCustomers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
+    const userRole = req.userRole!;
+    const userId = req.userId!;
+
+    // Build where clause based on role
+    const whereClause: any = {
+      isDeleted: false,
+    };
+
+    // Standard users only see customers assigned to them
+    if (userRole === 'USER') {
+      whereClause.assignedToUserId = userId;
+    }
+    // Admins see all customers (no additional filter needed)
 
     const [customers, total] = await Promise.all([
       prisma.customer.findMany({
-        where: {
-          isDeleted: false,
-        },
+        where: whereClause,
         skip,
         take: limit,
         orderBy: {
@@ -132,9 +143,7 @@ export const getCustomers = async (req: Request, res: Response): Promise<void> =
         },
       }),
       prisma.customer.count({
-        where: {
-          isDeleted: false,
-        },
+        where: whereClause,
       }),
     ]);
 
@@ -300,5 +309,66 @@ export const deleteCustomer = async (req: Request, res: Response): Promise<void>
   } catch (error) {
     console.error('Delete customer error:', error);
     res.status(500).json({ error: 'Internal server error while deleting customer' });
+  }
+};
+
+// PUT /customers/:id/assign - Assign customer to a user (Admin only)
+export const assignCustomer = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { assignedToUserId } = req.body;
+
+    // Validate assignedToUserId
+    if (assignedToUserId !== null && assignedToUserId !== undefined) {
+      if (typeof assignedToUserId !== 'string') {
+        res.status(400).json({ error: 'assignedToUserId must be a string or null' });
+        return;
+      }
+
+      // Verify user exists
+      const user = await prisma.user.findUnique({
+        where: { id: assignedToUserId },
+      });
+
+      if (!user) {
+        res.status(400).json({ error: 'Invalid assignedToUserId: user not found' });
+        return;
+      }
+    }
+
+    // Check if customer exists and is not deleted
+    const existingCustomer = await prisma.customer.findUnique({
+      where: { id },
+    });
+
+    if (!existingCustomer || existingCustomer.isDeleted) {
+      res.status(404).json({ error: 'Customer not found' });
+      return;
+    }
+
+    // Update assignment
+    const customer = await prisma.customer.update({
+      where: { id },
+      data: {
+        assignedToUserId: assignedToUserId === null ? null : assignedToUserId,
+      },
+      include: {
+        assignedToUser: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    res.status(200).json({
+      message: 'Customer assigned successfully',
+      customer,
+    });
+  } catch (error) {
+    console.error('Assign customer error:', error);
+    res.status(500).json({ error: 'Internal server error while assigning customer' });
   }
 };
