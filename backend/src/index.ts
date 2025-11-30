@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import customerRoutes from './routes/customerRoutes';
 import noteRoutes from './routes/noteRoutes';
+import dashboardRoutes from './routes/dashboardRoutes';
 import { authMiddleware, AuthRequest } from './middleware/authMiddleware';
 
 dotenv.config();
@@ -33,6 +34,9 @@ app.use('/customers', customerRoutes);
 
 // Note routes (protected)
 app.use('/', noteRoutes);
+
+// Dashboard routes (protected)
+app.use('/dashboard', dashboardRoutes);
 
 // Protected route example
 app.get('/protected', authMiddleware, (req: AuthRequest, res: Response) => {
