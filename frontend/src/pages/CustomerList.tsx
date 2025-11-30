@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCustomers, createCustomer, Customer } from '../api/client';
+import { getCustomers, createCustomer, Customer, getCurrentUser } from '../api/client';
 
 export default function CustomerList() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -18,6 +18,7 @@ export default function CustomerList() {
     status: 'Lead'
   });
   const navigate = useNavigate();
+  const user = getCurrentUser();
 
   useEffect(() => {
     fetchCustomers();
@@ -55,123 +56,118 @@ export default function CustomerList() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div className="spinner"></div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ margin: 0 }}>Customers</h1>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            + Create Customer
+    <div className="container">
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <div>
+          <h1 style={{ marginBottom: '0.5rem' }}>Customers</h1>
+          <p className="text-secondary" style={{ fontSize: '0.875rem' }}>
+            Manage your customer relationships • <span className={`badge ${user?.role === 'ADMIN' ? 'badge-active' : 'badge-prospect'}`} style={{ marginLeft: '0.5rem' }}>{user?.role}</span>
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={() => setShowCreateModal(true)} className="btn btn-success">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Create Customer
           </button>
-          <button
-            onClick={() => navigate('/dashboard')}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Back to Dashboard
+          <button onClick={() => navigate('/dashboard')} className="btn btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            Dashboard
           </button>
         </div>
       </div>
 
       {/* Create Customer Modal */}
       {showCreateModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '8px',
-            width: '90%',
-            maxWidth: '500px',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}>
-            <h2 style={{ marginTop: 0 }}>Create New Customer</h2>
-            <form onSubmit={handleCreateCustomer}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Name *
-                </label>
+        <div className="modal-overlay">
+          <div className="modal">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0 }}>Create New Customer</h2>
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setFormData({ name: '', email: '', phone: '', company: '', status: 'Lead' });
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                  padding: '0.25rem'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleCreateCustomer} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <label htmlFor="name">Name *</label>
                 <input
+                  id="name"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="John Doe"
                   required
-                  style={{ width: '100%', padding: '8px', fontSize: '14px', border: '1px solid #ccc', borderRadius: '4px' }}
                 />
               </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Email *
-                </label>
+              <div>
+                <label htmlFor="email">Email *</label>
                 <input
+                  id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="john@company.com"
                   required
-                  style={{ width: '100%', padding: '8px', fontSize: '14px', border: '1px solid #ccc', borderRadius: '4px' }}
                 />
               </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Phone
-                </label>
+              <div>
+                <label htmlFor="phone">Phone</label>
                 <input
+                  id="phone"
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  style={{ width: '100%', padding: '8px', fontSize: '14px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  placeholder="+1 (555) 000-0000"
                 />
               </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Company
-                </label>
+              <div>
+                <label htmlFor="company">Company</label>
                 <input
+                  id="company"
                   type="text"
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  style={{ width: '100%', padding: '8px', fontSize: '14px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  placeholder="Acme Inc."
                 />
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Status
-                </label>
+              <div>
+                <label htmlFor="status">Status</label>
                 <select
+                  id="status"
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  style={{ width: '100%', padding: '8px', fontSize: '14px', border: '1px solid #ccc', borderRadius: '4px' }}
                 >
                   <option value="Lead">Lead</option>
                   <option value="Prospect">Prospect</option>
@@ -180,35 +176,21 @@ export default function CustomerList() {
                 </select>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                 <button
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false);
                     setFormData({ name: '', email: '', phone: '', company: '', status: 'Lead' });
                   }}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#6c757d',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
+                  className="btn btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: creating ? 'not-allowed' : 'pointer'
-                  }}
+                  className="btn btn-success"
                 >
                   {creating ? 'Creating...' : 'Create Customer'}
                 </button>
@@ -218,123 +200,102 @@ export default function CustomerList() {
         </div>
       )}
 
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-        <div style={{ flex: '1', minWidth: '200px' }}>
-          <label htmlFor="search" style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-            Search (name, email, company):
-          </label>
-          <input
-            id="search"
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Type to search..."
-            style={{ width: '100%', padding: '8px', fontSize: '14px', border: '1px solid #ccc', borderRadius: '4px' }}
-          />
-        </div>
+      {/* Search & Filters */}
+      <div className="card" style={{ marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1', minWidth: '250px' }}>
+            <label htmlFor="search">Search Customers</label>
+            <input
+              id="search"
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, email, or company..."
+            />
+          </div>
 
-        <div style={{ minWidth: '150px' }}>
-          <label htmlFor="status" style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-            Filter by Status:
-          </label>
-          <select
-            id="status"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ width: '100%', padding: '8px', fontSize: '14px', border: '1px solid #ccc', borderRadius: '4px' }}
-          >
-            <option value="">All Statuses</option>
-            <option value="Lead">Lead</option>
-            <option value="Prospect">Prospect</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
+          <div style={{ minWidth: '200px' }}>
+            <label htmlFor="status">Filter by Status</label>
+            <select
+              id="status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">All Statuses</option>
+              <option value="Lead">Lead</option>
+              <option value="Prospect">Prospect</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {error && (
-        <div style={{ padding: '10px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', color: '#c00', marginBottom: '20px' }}>
+        <div style={{ padding: '1rem', background: '#fee2e2', border: '1px solid #fecaca', borderRadius: 'var(--radius-md)', color: '#991b1b', marginBottom: '1.5rem' }}>
           Error: {error}
         </div>
       )}
 
-      {loading ? (
-        <p>Loading customers...</p>
-      ) : (
-        <>
-          <p style={{ marginBottom: '15px', color: '#666' }}>
-            Found {customers.length} customer{customers.length !== 1 ? 's' : ''}
-          </p>
+      {/* Customer List */}
+      <div style={{ marginBottom: '1rem' }}>
+        <p className="text-secondary" style={{ fontSize: '0.875rem' }}>
+          Showing {customers.length} customer{customers.length !== 1 ? 's' : ''}
+        </p>
+      </div>
 
-          {customers.length === 0 ? (
-            <p>No customers found.</p>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
-                <thead>
-                  <tr style={{ backgroundColor: '#f8f9fa' }}>
-                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Name</th>
-                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Email</th>
-                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Company</th>
-                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Status</th>
-                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Assigned To</th>
-                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {customers.map((customer) => (
-                    <tr key={customer.id} style={{ borderBottom: '1px solid #ddd' }}>
-                      <td style={{ padding: '12px' }}>{customer.name}</td>
-                      <td style={{ padding: '12px' }}>{customer.email}</td>
-                      <td style={{ padding: '12px' }}>{customer.company || '-'}</td>
-                      <td style={{ padding: '12px' }}>
-                        <span
-                          style={{
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            fontWeight: 'bold',
-                            backgroundColor:
-                              customer.status === 'Active' ? '#d4edda' :
-                              customer.status === 'Lead' ? '#fff3cd' :
-                              customer.status === 'Prospect' ? '#d1ecf1' :
-                              '#f8d7da',
-                            color:
-                              customer.status === 'Active' ? '#155724' :
-                              customer.status === 'Lead' ? '#856404' :
-                              customer.status === 'Prospect' ? '#0c5460' :
-                              '#721c24'
-                          }}
-                        >
-                          {customer.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px' }}>
-                        {customer.assignedToUser?.name || 'Unassigned'}
-                      </td>
-                      <td style={{ padding: '12px' }}>
-                        <button
-                          onClick={() => navigate(`/customers/${customer.id}`)}
-                          style={{
-                            padding: '6px 12px',
-                            backgroundColor: '#007bff',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '14px'
-                          }}
-                        >
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
+      {customers.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" strokeWidth="2" style={{ margin: '0 auto 1rem' }}>
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <h3 style={{ color: 'var(--text-secondary)' }}>No customers found</h3>
+          <p className="text-secondary">Try adjusting your search or filters, or create a new customer.</p>
+        </div>
+      ) : (
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th>Status</th>
+                <th>Assigned To</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customers.map((customer) => (
+                <tr key={customer.id}>
+                  <td style={{ fontWeight: 500 }}>{customer.name}</td>
+                  <td>{customer.email}</td>
+                  <td>{customer.company || '-'}</td>
+                  <td>
+                    <span className={`badge badge-${customer.status.toLowerCase()}`}>
+                      {customer.status}
+                    </span>
+                  </td>
+                  <td className="text-secondary">
+                    {customer.assignedToUser?.name || 'Unassigned'}
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => navigate(`/customers/${customer.id}`)}
+                      className="btn btn-primary"
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8125rem' }}
+                    >
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
